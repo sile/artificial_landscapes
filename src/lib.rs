@@ -1,39 +1,41 @@
 pub use self::ackley::Ackley;
-pub use self::property::Property;
+use std::num::NonZeroUsize;
 
 mod ackley;
-mod property;
 
-pub trait GlobalMinimum {
-    fn global_minimum(&self) -> f64;
-}
-
-pub trait Multimodal {}
-pub trait Convex {}
-pub trait Differentiable {}
-pub trait Separable {}
-pub trait Asymmetric {}
-pub trait Constrained {}
-
+#[derive(Debug, Clone, Copy)]
 pub struct Interval {
     min: f64,
     max: f64,
 }
 impl Interval {
     pub fn new(min: f64, max: f64) -> Option<Self> {
-        Some(Self { min, max })
+        if min <= max {
+            Some(Self { min, max })
+        } else {
+            None
+        }
+    }
+
+    pub const unsafe fn new_unchecked(min: f64, max: f64) -> Self {
+        Self { min, max }
+    }
+
+    pub const fn min(&self) -> f64 {
+        self.min
+    }
+
+    pub const fn max(&self) -> f64 {
+        self.max
     }
 }
 
-pub trait InputDomain {
+pub trait SingleObjectiveProblem {
     fn input_domain(&self) -> &[Interval];
-}
-
-pub trait SingleObjective: InputDomain {
     fn global_minimum(&self) -> f64;
     fn evaluate(&self, xs: &[f64]) -> f64;
-}
 
-pub trait MultiObjective: InputDomain {
-    fn evaluate(&self, xs: &[f64]) -> &[f64];
+    fn dimension(&self) -> NonZeroUsize {
+        NonZeroUsize::new(self.input_domain().len()).unwrap_or_else(|| panic!())
+    }
 }

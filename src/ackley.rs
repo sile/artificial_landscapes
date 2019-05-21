@@ -1,8 +1,10 @@
-use crate::{Interval, SingleObjectiveProblem};
+use crate::{Interval, SingleObjective};
 use std::f64::consts::PI;
 use std::num::NonZeroUsize;
 
-/// Ackley.
+const X_DOMAIN: Interval = unsafe { Interval::new_unchecked(-32.0, 32.0) };
+
+/// Ackley Function.
 ///
 /// # References
 ///
@@ -14,13 +16,11 @@ pub struct Ackley {
 impl Ackley {
     /// Makes a new `Ackley` instance.
     pub fn new(dimension: NonZeroUsize) -> Self {
-        let input_domain = (0..dimension.get())
-            .map(|_| unsafe { Interval::new_unchecked(-32.0, 32.0) })
-            .collect();
+        let input_domain = (0..dimension.get()).map(|_| X_DOMAIN).collect();
         Self { input_domain }
     }
 }
-impl SingleObjectiveProblem for Ackley {
+impl SingleObjective for Ackley {
     fn input_domain(&self) -> &[Interval] {
         &self.input_domain
     }
@@ -41,6 +41,27 @@ impl SingleObjectiveProblem for Ackley {
         let temp0 = -B * (xs.iter().map(|&x| x * x).sum::<f64>() / n).sqrt();
         let temp1 = xs.iter().map(|&x| (C * x).cos()).sum::<f64>() / n;
         -A * temp0.exp() - temp1.exp() + A + 1f64.exp()
+    }
+}
+
+/// Ackley N. 2 Function.
+///
+/// # References
+///
+/// - [BenchmarkFcns: Ackley N. 2 Function](http://http://benchmarkfcns.xyz/benchmarkfcns/ackleyn2fcn.html)
+#[derive(Debug, Clone)]
+pub struct AckleyN2;
+impl SingleObjective for AckleyN2 {
+    fn input_domain(&self) -> &[Interval] {
+        &[X_DOMAIN, X_DOMAIN]
+    }
+
+    fn global_minimum(&self) -> f64 {
+        -200.0
+    }
+
+    fn evaluate(&self, xs: &[f64]) -> f64 {
+        panic!()
     }
 }
 

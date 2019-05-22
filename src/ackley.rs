@@ -1,5 +1,5 @@
 use crate::{Interval, SingleObjective};
-use std::f64::consts::PI;
+use std::f64::consts::{E, PI};
 use std::num::NonZeroUsize;
 
 const X_DOMAIN: Interval = unsafe { Interval::new_unchecked(-32.0, 32.0) };
@@ -40,7 +40,7 @@ impl SingleObjective for Ackley {
 
         let temp0 = -B * (xs.iter().map(|&x| x * x).sum::<f64>() / n).sqrt();
         let temp1 = xs.iter().map(|&x| (C * x).cos()).sum::<f64>() / n;
-        -A * temp0.exp() - temp1.exp() + A + 1f64.exp()
+        -A * temp0.exp() - temp1.exp() + A + E
     }
 }
 
@@ -61,7 +61,32 @@ impl SingleObjective for AckleyN2 {
     }
 
     fn evaluate(&self, xs: &[f64]) -> f64 {
-        panic!()
+        assert_eq!(xs.len(), 2);
+
+        -200.0 * (-0.2 * (xs[0].powi(2) + xs[1].powi(2)).sqrt()).exp()
+    }
+}
+
+/// Ackley N. 3 Function.
+///
+/// # References
+///
+/// - [BenchmarkFcns: Ackley N. 3 Function](http://http://benchmarkfcns.xyz/benchmarkfcns/ackleyn3fcn.html)
+#[derive(Debug, Clone)]
+pub struct AckleyN3;
+impl SingleObjective for AckleyN3 {
+    fn input_domain(&self) -> &[Interval] {
+        &[X_DOMAIN, X_DOMAIN]
+    }
+
+    fn global_minimum(&self) -> f64 {
+        -195.629028238419
+    }
+
+    fn evaluate(&self, xs: &[f64]) -> f64 {
+        assert_eq!(xs.len(), 2);
+
+        AckleyN2.evaluate(xs) + 5.0 * ((3.0 * xs[0]).cos() + (3.0 * xs[1]).sin()).exp()
     }
 }
 
@@ -126,4 +151,10 @@ mod tests {
             assert_eq!(f.evaluate(x), *y);
         }
     }
+
+    #[test]
+    fn ackley_n2_works() {
+        assert_eq!(AckleyN2.evaluate(&[0.0, 0.0]), AckleyN2.global_minimum());
+    }
+
 }

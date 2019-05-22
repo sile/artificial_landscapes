@@ -156,5 +156,4 @@ mod tests {
     fn ackley_n2_works() {
         assert_eq!(AckleyN2.evaluate(&[0.0, 0.0]), AckleyN2.global_minimum());
     }
-
 }

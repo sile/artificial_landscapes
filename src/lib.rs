@@ -1,3 +1,9 @@
+//! Test functions
+//!
+//! # References
+//!
+//! - [A Literature Survey of Benchmark Functions For Global Optimization Problems](https://arxiv.org/abs/1308.4008)
+//! - [BenchmarkFcns](http://http://benchmarkfcns.xyz/fcns)
 pub use self::ackley::Ackley;
 use std::num::NonZeroUsize;
 

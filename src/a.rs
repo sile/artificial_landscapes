@@ -2,7 +2,9 @@ use crate::{Interval, SingleObjective};
 use std::f64::consts::{E, PI};
 use std::num::NonZeroUsize;
 
-const X_DOMAIN: Interval = unsafe { Interval::new_unchecked(-32.0, 32.0) };
+const fn interval(low: f64, high: f64) -> Interval {
+    unsafe { Interval::new_unchecked(low, high) }
+}
 
 /// Ackley Function.
 ///
@@ -16,7 +18,9 @@ pub struct Ackley {
 impl Ackley {
     /// Makes a new `Ackley` instance.
     pub fn new(dimension: NonZeroUsize) -> Self {
-        let input_domain = (0..dimension.get()).map(|_| X_DOMAIN).collect();
+        let input_domain = (0..dimension.get())
+            .map(|_| interval(-32.0, 32.0))
+            .collect();
         Self { input_domain }
     }
 }
@@ -53,7 +57,8 @@ impl SingleObjective for Ackley {
 pub struct AckleyN2;
 impl SingleObjective for AckleyN2 {
     fn input_domain(&self) -> &[Interval] {
-        &[X_DOMAIN, X_DOMAIN]
+        const I: Interval = interval(-32.0, 32.0);
+        &[I, I]
     }
 
     fn global_minimum(&self) -> f64 {
@@ -76,7 +81,8 @@ impl SingleObjective for AckleyN2 {
 pub struct AckleyN3;
 impl SingleObjective for AckleyN3 {
     fn input_domain(&self) -> &[Interval] {
-        &[X_DOMAIN, X_DOMAIN]
+        const I: Interval = interval(-32.0, 32.0);
+        &[I, I]
     }
 
     fn global_minimum(&self) -> f64 {
@@ -87,6 +93,73 @@ impl SingleObjective for AckleyN3 {
         assert_eq!(xs.len(), 2);
 
         AckleyN2.evaluate(xs) + 5.0 * ((3.0 * xs[0]).cos() + (3.0 * xs[1]).sin()).exp()
+    }
+}
+
+/// Ackley N. 4 Function.
+///
+/// # References
+///
+/// - [BenchmarkFcns: Ackley N. 4 Function](http://http://benchmarkfcns.xyz/benchmarkfcns/ackleyn4fcn.html)
+#[derive(Debug, Clone)]
+pub struct AckleyN4 {
+    input_domain: Vec<Interval>,
+}
+impl AckleyN4 {
+    /// Makes a new `AckleyN4` instance.
+    pub fn new(dimension: NonZeroUsize) -> Self {
+        let input_domain = (0..dimension.get())
+            .map(|_| interval(-35.0, 35.0))
+            .collect();
+        Self { input_domain }
+    }
+}
+impl SingleObjective for AckleyN4 {
+    fn input_domain(&self) -> &[Interval] {
+        &self.input_domain
+    }
+
+    fn global_minimum(&self) -> f64 {
+        -4.5901006651507235
+    }
+
+    fn evaluate(&self, xs: &[f64]) -> f64 {
+        assert_eq!(xs.len(), self.dimension().get());
+
+        (0..xs.len() - 1)
+            .map(|i| {
+                let x0 = xs[i];
+                let x1 = xs[i + 1];
+                let a = (x0 * x0 + x1 * x1).sqrt();
+                let b = 3.0 * ((2.0 * x0).cos() + (2.0 * x1).sin());
+                (-0.2f64).exp() * a + b
+            })
+            .sum()
+    }
+}
+
+/// Adjiman Function.
+///
+/// # References
+///
+/// - [BenchmarkFcns: Adjiman Function](http://http://benchmarkfcns.xyz/benchmarkfcns/adjimanfcn.html)
+#[derive(Debug, Clone)]
+pub struct Adjiman;
+impl SingleObjective for Adjiman {
+    fn input_domain(&self) -> &[Interval] {
+        const X: Interval = interval(-1.0, 2.0);
+        const Y: Interval = interval(-1.0, 1.0);
+        &[X, Y]
+    }
+
+    fn global_minimum(&self) -> f64 {
+        -2.0218067833370204
+    }
+
+    fn evaluate(&self, xs: &[f64]) -> f64 {
+        assert_eq!(xs.len(), 2);
+
+        xs[0].cos() * xs[1].sin() - xs[0] / (xs[1].powi(2) + 1.0)
     }
 }
 
@@ -155,5 +228,45 @@ mod tests {
     #[test]
     fn ackley_n2_works() {
         assert_eq!(AckleyN2.evaluate(&[0.0, 0.0]), AckleyN2.global_minimum());
+    }
+
+    #[test]
+    fn ackley_n4_works() {
+        let f = AckleyN4::new(unsafe { NonZeroUsize::new_unchecked(2) });
+        assert_eq!(f.evaluate(&[-1.51, -0.755]), f.global_minimum());
+    }
+
+    #[test]
+    fn adjiman_works() {
+        assert_eq!(Adjiman.evaluate(&[2.0, 0.10578]), Adjiman.global_minimum());
+
+        let xs = [
+            [1.6988039632644485, 0.19813149356712767],
+            [1.9495584023968218, -0.9390715549110211],
+            [1.001954306865192, 0.6260208920119086],
+            [-0.04794751315575374, 0.797488825309429],
+            [-0.93529327876237, 0.46046782236002093],
+            [1.6553628440694266, 0.2125948350545459],
+            [0.2165112459358971, 0.5655298124927721],
+            [1.2011847204083157, -0.9633588309312502],
+            [-0.7206031794145588, 0.0931198693185391],
+            [1.9424144068370417, -0.15917902447315369],
+        ];
+        let ys = [
+            -1.659762578387234,
+            -0.7375681290602631,
+            -0.4042329508407953,
+            0.7440898402043912,
+            1.0354432243712317,
+            -1.601603391660295,
+            0.3593067922342904,
+            -0.9196315410004139,
+            0.7842782459976936,
+            -1.836855958099792,
+        ];
+        let f = Adjiman;
+        for (x, y) in xs.iter().zip(ys.iter()) {
+            assert_eq!(f.evaluate(x), *y);
+        }
     }
 }

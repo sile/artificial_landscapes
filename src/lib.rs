@@ -4,10 +4,10 @@
 //!
 //! - [A Literature Survey of Benchmark Functions For Global Optimization Problems](https://arxiv.org/abs/1308.4008)
 //! - [BenchmarkFcns](http://http://benchmarkfcns.xyz/fcns)
-pub use self::ackley::Ackley;
+pub use self::a::{Ackley, AckleyN2, AckleyN3, AckleyN4};
 use std::num::NonZeroUsize;
 
-mod ackley;
+mod a;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Interval {

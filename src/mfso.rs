@@ -7,8 +7,12 @@ use crate::{Interval, Objective};
 use std::f64::consts::PI;
 use std::fmt;
 use std::iter;
+use std::num::NonZeroU64;
 
 const ZERO_TO_ONE: Interval = unsafe { Interval::new_unchecked(0.0, 1.0) };
+
+const ONE: NonZeroU64 = unsafe { NonZeroU64::new_unchecked(1) };
+const TEN: NonZeroU64 = unsafe { NonZeroU64::new_unchecked(10) };
 
 pub trait MultiFidelitySingleObjective: Objective<Output = Outputs> {
     fn max_cost(&self) -> Cost {
@@ -21,7 +25,7 @@ pub trait MultiFidelitySingleObjective: Objective<Output = Outputs> {
     }
 }
 
-pub type Cost = u64;
+pub type Cost = NonZeroU64;
 
 pub struct Outputs(Box<dyn Iterator<Item = (Cost, f64)>>);
 impl Outputs {
@@ -49,8 +53,19 @@ impl fmt::Debug for Outputs {
 ///
 /// See: [Multi-fidelity Gaussian Process Bandit Optimisation](https://arxiv.org/abs/1603.06288)
 #[derive(Debug)]
-pub struct CurrinExponential;
+pub struct CurrinExponential {
+    cost_factor: NonZeroU64,
+}
+impl Default for CurrinExponential {
+    fn default() -> Self {
+        Self::new(TEN)
+    }
+}
 impl CurrinExponential {
+    pub const fn new(cost_factor: NonZeroU64) -> Self {
+        Self { cost_factor }
+    }
+
     fn f2(&self, xs: &[f64]) -> f64 {
         let x1 = xs[0];
         let x2 = xs[1];
@@ -81,17 +96,34 @@ impl Objective for CurrinExponential {
     }
 
     fn evaluate(&self, xs: &[f64]) -> Self::Output {
-        Outputs::new(iter::once((1, self.f1(xs))).chain(iter::once((10, self.f2(xs)))))
+        Outputs::new(
+            iter::once((ONE, self.f1(xs))).chain(iter::once((self.cost_factor, self.f2(xs)))),
+        )
     }
 }
-impl MultiFidelitySingleObjective for CurrinExponential {}
+impl MultiFidelitySingleObjective for CurrinExponential {
+    fn max_cost(&self) -> Cost {
+        self.cost_factor
+    }
+}
 
 /// Park function (2 fidelity).
 ///
 /// See: [Multi-fidelity Gaussian Process Bandit Optimisation](https://arxiv.org/abs/1603.06288)
 #[derive(Debug)]
-pub struct Park;
+pub struct Park {
+    cost_factor: NonZeroU64,
+}
+impl Default for Park {
+    fn default() -> Self {
+        Self::new(TEN)
+    }
+}
 impl Park {
+    pub const fn new(cost_factor: NonZeroU64) -> Self {
+        Self { cost_factor }
+    }
+
     fn f2(&self, xs: &[f64]) -> f64 {
         let x1 = xs[0];
         let x2 = xs[1];
@@ -123,17 +155,34 @@ impl Objective for Park {
     }
 
     fn evaluate(&self, xs: &[f64]) -> Self::Output {
-        Outputs::new(iter::once((1, self.f1(xs))).chain(iter::once((10, self.f2(xs)))))
+        Outputs::new(
+            iter::once((TEN, self.f1(xs))).chain(iter::once((self.cost_factor, self.f2(xs)))),
+        )
     }
 }
-impl MultiFidelitySingleObjective for Park {}
+impl MultiFidelitySingleObjective for Park {
+    fn max_cost(&self) -> Cost {
+        self.cost_factor
+    }
+}
 
 /// Borehole function (2 fidelity).
 ///
 /// See: [Multi-fidelity Gaussian Process Bandit Optimisation](https://arxiv.org/abs/1603.06288)
 #[derive(Debug)]
-pub struct Borehole;
+pub struct Borehole {
+    cost_factor: NonZeroU64,
+}
+impl Default for Borehole {
+    fn default() -> Self {
+        Self::new(TEN)
+    }
+}
 impl Borehole {
+    pub const fn new(cost_factor: NonZeroU64) -> Self {
+        Self { cost_factor }
+    }
+
     fn f2(&self, xs: &[f64]) -> f64 {
         let x1 = xs[0];
         let x2 = xs[1];
@@ -186,7 +235,13 @@ impl Objective for Borehole {
     }
 
     fn evaluate(&self, xs: &[f64]) -> Self::Output {
-        Outputs::new(iter::once((1, self.f1(xs))).chain(iter::once((10, self.f2(xs)))))
+        Outputs::new(
+            iter::once((ONE, self.f1(xs))).chain(iter::once((self.cost_factor, self.f2(xs)))),
+        )
     }
 }
-impl MultiFidelitySingleObjective for Borehole {}
+impl MultiFidelitySingleObjective for Borehole {
+    fn max_cost(&self) -> Cost {
+        self.cost_factor
+    }
+}

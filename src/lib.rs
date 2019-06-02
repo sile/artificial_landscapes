@@ -11,6 +11,17 @@ pub mod mfso;
 
 mod a;
 
+pub trait Objective {
+    type Output;
+
+    fn input_domain(&self) -> &[Interval];
+    fn evaluate(&self, xs: &[f64]) -> Self::Output;
+
+    fn dimension(&self) -> NonZeroUsize {
+        NonZeroUsize::new(self.input_domain().len()).unwrap_or_else(|| panic!())
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Interval {
     min: f64,

@@ -38,7 +38,6 @@ impl Interval {
 
 pub trait SingleObjective {
     fn input_domain(&self) -> &[Interval];
-    fn global_minimum(&self) -> f64;
     fn evaluate(&self, xs: &[f64]) -> f64;
 
     fn dimension(&self) -> NonZeroUsize {

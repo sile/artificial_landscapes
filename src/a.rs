@@ -29,10 +29,6 @@ impl SingleObjective for Ackley {
         &self.input_domain
     }
 
-    fn global_minimum(&self) -> f64 {
-        0.0
-    }
-
     fn evaluate(&self, xs: &[f64]) -> f64 {
         assert_eq!(xs.len(), self.dimension().get());
 
@@ -61,10 +57,6 @@ impl SingleObjective for AckleyN2 {
         &[I, I]
     }
 
-    fn global_minimum(&self) -> f64 {
-        -200.0
-    }
-
     fn evaluate(&self, xs: &[f64]) -> f64 {
         assert_eq!(xs.len(), 2);
 
@@ -83,10 +75,6 @@ impl SingleObjective for AckleyN3 {
     fn input_domain(&self) -> &[Interval] {
         const I: Interval = interval(-32.0, 32.0);
         &[I, I]
-    }
-
-    fn global_minimum(&self) -> f64 {
-        -195.629028238419
     }
 
     fn evaluate(&self, xs: &[f64]) -> f64 {
@@ -119,10 +107,6 @@ impl SingleObjective for AckleyN4 {
         &self.input_domain
     }
 
-    fn global_minimum(&self) -> f64 {
-        -4.5901006651507235
-    }
-
     fn evaluate(&self, xs: &[f64]) -> f64 {
         assert_eq!(xs.len(), self.dimension().get());
 
@@ -150,10 +134,6 @@ impl SingleObjective for Adjiman {
         const X: Interval = interval(-1.0, 2.0);
         const Y: Interval = interval(-1.0, 1.0);
         &[X, Y]
-    }
-
-    fn global_minimum(&self) -> f64 {
-        -2.0218067833370204
     }
 
     fn evaluate(&self, xs: &[f64]) -> f64 {
@@ -227,18 +207,21 @@ mod tests {
 
     #[test]
     fn ackley_n2_works() {
-        assert_eq!(AckleyN2.evaluate(&[0.0, 0.0]), AckleyN2.global_minimum());
+        let global_minimum = -200.0;
+        assert_eq!(AckleyN2.evaluate(&[0.0, 0.0]), global_minimum);
     }
 
     #[test]
     fn ackley_n4_works() {
+        let global_minimum = -4.5901006651507235;
         let f = AckleyN4::new(unsafe { NonZeroUsize::new_unchecked(2) });
-        assert_eq!(f.evaluate(&[-1.51, -0.755]), f.global_minimum());
+        assert_eq!(f.evaluate(&[-1.51, -0.755]), global_minimum);
     }
 
     #[test]
     fn adjiman_works() {
-        assert_eq!(Adjiman.evaluate(&[2.0, 0.10578]), Adjiman.global_minimum());
+        let global_minimum = -2.0218067833370204;
+        assert_eq!(Adjiman.evaluate(&[2.0, 0.10578]), global_minimum);
 
         let xs = [
             [1.6988039632644485, 0.19813149356712767],

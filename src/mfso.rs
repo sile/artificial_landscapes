@@ -7,7 +7,7 @@ use crate::{Interval, Objective};
 use std::f64::consts::PI;
 use std::fmt;
 use std::iter;
-use std::num::{NonZeroU64, NonZeroU8};
+use std::num::NonZeroU64;
 
 const ZERO_TO_ONE: Interval = unsafe { Interval::new_unchecked(0.0, 1.0) };
 
@@ -251,18 +251,18 @@ impl MultiFidelitySingleObjective for Borehole {
 /// See: [Multi-fidelity Gaussian Process Bandit Optimisation](https://arxiv.org/abs/1603.06288)
 #[derive(Debug, Clone)]
 pub struct Hartmann3d {
-    max_fidelity: NonZeroU8,
+    max_level: u8,
     cost_factor: NonZeroU64,
 }
 impl Default for Hartmann3d {
     fn default() -> Self {
-        Self::new(unsafe { NonZeroU8::new_unchecked(3) }, TEN)
+        Self::new(2, TEN)
     }
 }
 impl Hartmann3d {
-    pub const fn new(max_fidelity: NonZeroU8, cost_factor: NonZeroU64) -> Self {
+    pub const fn new(max_level: u8, cost_factor: NonZeroU64) -> Self {
         Self {
-            max_fidelity,
+            max_level,
             cost_factor,
         }
     }
@@ -271,7 +271,7 @@ impl Hartmann3d {
         const ALPHA: [f64; 4] = [1.0, 1.2, 3.0, 3.2];
         const DELTA: [f64; 4] = [0.01, -0.01, -0.1, 0.1];
 
-        ALPHA[i] + (self.max_fidelity.get() - m) as f64 * DELTA[i]
+        ALPHA[i] + (self.max_level - m) as f64 * DELTA[i]
     }
 
     fn f(&self, m: u8, xs: &[f64]) -> f64 {
@@ -310,8 +310,8 @@ impl Objective for Hartmann3d {
     fn evaluate(&self, xs: &[f64]) -> Self::Output {
         let xs = Vec::from(xs);
         let this = self.clone();
-        Outputs::new((0..self.max_fidelity.get()).map(move |m| {
-            let v = this.f(m + 1, &xs);
+        Outputs::new((0..=self.max_level).map(move |m| {
+            let v = this.f(m, &xs);
             let c = unsafe { NonZeroU64::new_unchecked(this.cost_factor.get().pow(u32::from(m))) };
             (c, v)
         }))
@@ -319,13 +319,7 @@ impl Objective for Hartmann3d {
 }
 impl MultiFidelitySingleObjective for Hartmann3d {
     fn max_cost(&self) -> Cost {
-        unsafe {
-            NonZeroU64::new_unchecked(
-                self.cost_factor
-                    .get()
-                    .pow(u32::from(self.max_fidelity.get())),
-            )
-        }
+        unsafe { NonZeroU64::new_unchecked(self.cost_factor.get().pow(u32::from(self.max_level))) }
     }
 }
 
@@ -334,18 +328,18 @@ impl MultiFidelitySingleObjective for Hartmann3d {
 /// See: [Multi-fidelity Gaussian Process Bandit Optimisation](https://arxiv.org/abs/1603.06288)
 #[derive(Debug, Clone)]
 pub struct Hartmann6d {
-    max_fidelity: NonZeroU8,
+    max_level: u8,
     cost_factor: NonZeroU64,
 }
 impl Default for Hartmann6d {
     fn default() -> Self {
-        Self::new(unsafe { NonZeroU8::new_unchecked(4) }, TEN)
+        Self::new(4, TEN)
     }
 }
 impl Hartmann6d {
-    pub const fn new(max_fidelity: NonZeroU8, cost_factor: NonZeroU64) -> Self {
+    pub const fn new(max_level: u8, cost_factor: NonZeroU64) -> Self {
         Self {
-            max_fidelity,
+            max_level,
             cost_factor,
         }
     }
@@ -354,7 +348,7 @@ impl Hartmann6d {
         const ALPHA: [f64; 4] = [1.0, 1.2, 3.0, 3.2];
         const DELTA: [f64; 4] = [0.01, -0.01, -0.1, 0.1];
 
-        ALPHA[i] + (self.max_fidelity.get() - m) as f64 * DELTA[i]
+        ALPHA[i] + (self.max_level - m) as f64 * DELTA[i]
     }
 
     fn f(&self, m: u8, xs: &[f64]) -> f64 {
@@ -400,8 +394,8 @@ impl Objective for Hartmann6d {
     fn evaluate(&self, xs: &[f64]) -> Self::Output {
         let xs = Vec::from(xs);
         let this = self.clone();
-        Outputs::new((0..self.max_fidelity.get()).map(move |m| {
-            let v = this.f(m + 1, &xs);
+        Outputs::new((0..=self.max_level).map(move |m| {
+            let v = this.f(m, &xs);
             let c = unsafe { NonZeroU64::new_unchecked(this.cost_factor.get().pow(u32::from(m))) };
             (c, v)
         }))
@@ -409,12 +403,6 @@ impl Objective for Hartmann6d {
 }
 impl MultiFidelitySingleObjective for Hartmann6d {
     fn max_cost(&self) -> Cost {
-        unsafe {
-            NonZeroU64::new_unchecked(
-                self.cost_factor
-                    .get()
-                    .pow(u32::from(self.max_fidelity.get())),
-            )
-        }
+        unsafe { NonZeroU64::new_unchecked(self.cost_factor.get().pow(u32::from(self.max_level))) }
     }
 }

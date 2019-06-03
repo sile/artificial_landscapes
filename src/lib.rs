@@ -7,6 +7,7 @@
 pub use self::a::{Ackley, AckleyN2, AckleyN3, AckleyN4};
 use std::num::NonZeroUsize;
 
+pub mod mfb;
 pub mod mfso;
 
 mod a;

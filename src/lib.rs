@@ -23,6 +23,10 @@ pub trait Objective {
     }
 }
 
+pub trait GlobalOptimumInput {
+    fn global_optimum_input(&self) -> &[f64];
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Interval {
     min: f64,
